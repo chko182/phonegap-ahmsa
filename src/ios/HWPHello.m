@@ -49,4 +49,22 @@
 
 }
 
+- (void)start:(CDVInvokedUrlCommand*)command
+{
+
+    NSString* callbackId = [command callbackId];
+    NSString* name = [[command arguments] objectAtIndex:0];
+    NSString* msg = [NSString stringWithFormat: @""];
+
+    NSString *mystr=[[NSString alloc] initWithFormat:name];
+    NSURL *myurl=[[NSURL alloc] initWithString:mystr];
+    [[UIApplication sharedApplication] openURL:myurl];
+	   
+    CDVPluginResult* result = [CDVPluginResult
+                               resultWithStatus:CDVCommandStatus_OK
+                               messageAsString:msg];
+
+    [self success:result callbackId:callbackId];
+}
+
 @end
