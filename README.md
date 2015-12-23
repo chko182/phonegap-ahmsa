@@ -1,3 +1,7 @@
-# Cordova VPN Plugin - Tecnoscala
+# Cordova Plugin
 
-Desarrollado por TecnoScala para revisión de Conexiones VPN en dispositivos iOS y Android.
+Desarrollado para:
+
+1. Detectar conexiones VPN.
+2. Abrir otras aplicaciones.
+3. Obtener datos del dispositivo (nombre, UUID, plataforma, etc.)
