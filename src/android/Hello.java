@@ -1,7 +1,11 @@
 package com.example.plugin;
 
+import java.util.TimeZone; //device
+import org.apache.cordova.CordovaWebView; //device
+
 import org.apache.cordova.CallbackContext; //startapp
 import org.apache.cordova.CordovaPlugin; //startapp
+import org.apache.cordova.CordovaInterface; //device
 
 import org.apache.cordova.*;
 import org.json.JSONArray;
@@ -21,14 +25,30 @@ import android.content.pm.PackageInfo; //startapp
 import java.util.Iterator; //startapp
 import android.net.Uri; //startapp
 
-public class Hello extends CordovaPlugin {
+import android.provider.Settings; //device
 
+public class Hello extends CordovaPlugin {
+	public static final String TAG = "Device";
+
+    public static String platform;                            // Device OS
+    public static String uuid;                                // Device UUID
+
+    private static final String ANDROID_PLATFORM = "Android";
+    private static final String AMAZON_PLATFORM = "amazon-fireos";
+    private static final String AMAZON_DEVICE = "Amazon";
+	
     //@Override
 	
 	/**
      * Constructor.
      */
 	public Hello() { }
+	
+	//DEVICE
+	public void initialize(CordovaInterface cordova, CordovaWebView webView) {
+        super.initialize(cordova, webView);
+        Hello.uuid = getUuid();
+    }
 	
     public boolean execute(String action, JSONArray data, CallbackContext callbackContext) throws JSONException {
 
@@ -116,7 +136,33 @@ public class Hello extends CordovaPlugin {
 				return true;
 			} else {
 				
-				return false;
+				if (action.equals("getDeviceInfo")) {
+										
+					String message = "Nombre: " + this.getProductName() + "\n";
+					message += "UUID: " + this.getUuid() + "\n";
+					/*message += "|" + this.getModel();
+					message += "|" + this.getManufacturer();
+					message += "|" + this.getSerialNumber();
+					message += "|" + this.getOSVersion();*/
+					callbackContext.success(message);
+					
+					return true;
+					
+				} else {
+					
+					if (action.equals("getPlataforma")) {
+						
+						String message = "Android";
+						callbackContext.success(message);
+						
+						return true;
+						
+					} else {
+						
+						return false;
+						
+					}
+				}
 			}		
         }
     }
@@ -272,4 +318,88 @@ public class Hello extends CordovaPlugin {
 			callbackContext.error(e.toString());
 		}
 	}
+	
+	/**
+     * Get the OS name.
+     *
+     * @return
+     */
+    public String getPlatform() {
+        String platform;
+        if (isAmazonDevice()) {
+            platform = AMAZON_PLATFORM;
+        } else {
+            platform = ANDROID_PLATFORM;
+        }
+        return platform;
+    }
+	
+	/**
+     * Get the device's Universally Unique Identifier (UUID).
+     *
+     * @return
+     */
+	public String getUuid() {
+        String uuid = Settings.Secure.getString(this.cordova.getActivity().getContentResolver(), android.provider.Settings.Secure.ANDROID_ID);
+        return uuid;
+    }
+	
+	public String getModel() {
+        String model = android.os.Build.MODEL;
+        return model;
+    }
+
+    public String getProductName() {
+        String productname = android.os.Build.PRODUCT;
+        return productname;
+    }
+
+    public String getManufacturer() {
+        String manufacturer = android.os.Build.MANUFACTURER;
+        return manufacturer;
+    }
+
+    public String getSerialNumber() {
+        String serial = android.os.Build.SERIAL;
+        return serial;
+    }
+
+    /**
+     * Get the OS version.
+     *
+     * @return
+     */
+    public String getOSVersion() {
+        String osversion = android.os.Build.VERSION.RELEASE;
+        return osversion;
+    }
+
+    public String getSDKVersion() {
+        @SuppressWarnings("deprecation")
+        String sdkversion = android.os.Build.VERSION.SDK;
+        return sdkversion;
+    }
+
+    public String getTimeZoneID() {
+        TimeZone tz = TimeZone.getDefault();
+        return (tz.getID());
+    }
+
+    /**
+     * Function to check if the device is manufactured by Amazon
+     *
+     * @return
+     */
+    public boolean isAmazonDevice() {
+        if (android.os.Build.MANUFACTURER.equals(AMAZON_DEVICE)) {
+            return true;
+        }
+        return false;
+    }
+
+    public boolean isVirtual() {
+	return android.os.Build.FINGERPRINT.contains("generic") ||
+	    android.os.Build.PRODUCT.contains("sdk");
+    }
 }
+
