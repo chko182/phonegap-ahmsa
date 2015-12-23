@@ -1,4 +1,6 @@
 #import "HWPHello.h"
+#include <ifaddrs.h>
+#include <arpa/inet.h>
 
 @implementation HWPHello
 
