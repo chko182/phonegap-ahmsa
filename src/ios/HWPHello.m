@@ -67,4 +67,37 @@
     [self success:result callbackId:callbackId];
 }
 
+- (void)getDeviceInfo:(CDVInvokedUrlCommand*)command
+{
+
+    NSString* callbackId = [command callbackId];
+    NSString *msg = @" ";
+    
+    msg = [UIDevice currentDevice].name;
+    msg = [sRetrun stringByAppendingString:@"|"];
+    msg = [sRetrun stringByAppendingString:[UIDevice currentDevice].identifierForVendor.UUIDString];
+
+    CDVPluginResult* result = [CDVPluginResult
+                               resultWithStatus:CDVCommandStatus_OK
+                               messageAsString:msg];
+
+    [self success:result callbackId:callbackId];
+}
+
+- (void)getPlataforma:(CDVInvokedUrlCommand*)command
+{
+
+	NSString* msg = [NSString stringWithFormat: @" "];
+	NSString* callbackId = [command callbackId];
+	
+	msg = [NSString stringWithUTF8String:"iOS"];
+	
+	CDVPluginResult* result = [CDVPluginResult
+                               resultWithStatus:CDVCommandStatus_OK
+                               messageAsString:msg];
+
+    [self success:result callbackId:callbackId];
+	
+}
+
 @end
