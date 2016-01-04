@@ -71,7 +71,7 @@
 {
 
     NSString* callbackId = [command callbackId];
-    NSString *msg = @" ";
+    NSString* msg = @" ";
     
     msg = [UIDevice currentDevice].name;
     msg = [msg stringByAppendingString:@"|"];
