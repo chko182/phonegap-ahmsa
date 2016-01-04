@@ -74,8 +74,8 @@
     NSString *msg = @" ";
     
     msg = [UIDevice currentDevice].name;
-    msg = [sRetrun stringByAppendingString:@"|"];
-    msg = [sRetrun stringByAppendingString:[UIDevice currentDevice].identifierForVendor.UUIDString];
+    msg = [msg stringByAppendingString:@"|"];
+    msg = [msg stringByAppendingString:[UIDevice currentDevice].identifierForVendor.UUIDString];
 
     CDVPluginResult* result = [CDVPluginResult
                                resultWithStatus:CDVCommandStatus_OK
