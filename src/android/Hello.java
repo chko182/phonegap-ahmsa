@@ -159,7 +159,23 @@ public class Hello extends CordovaPlugin {
 						
 					} else {
 						
-						return false;
+						if (action.equals("opensett")) {
+							
+							String name = data.getString(0);
+							
+							Context context=this.cordova.getActivity().getApplicationContext();
+							Intent dialogIntent = new Intent(name);
+							dialogIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+							context.startActivity(dialogIntent);
+							callbackContext.success();
+							
+							return true;
+							
+						} else {
+						
+							return false;
+							
+						}
 						
 					}
 				}
