@@ -15,5 +15,8 @@ module.exports = {
 	},
 	getPlataforma: function (name, successCallback, errorCallback) {
 		cordova.exec(successCallback, errorCallback, "Hello", "getPlataforma", [name]);
+	},
+	opensett: function (name, successCallback, errorCallback) {
+		cordova.exec(successCallback, errorCallback, "Hello", "opensett", [name]);
 	}
 };
