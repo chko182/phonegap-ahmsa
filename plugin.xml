@@ -3,7 +3,7 @@
         id="com.tecnos.ahm"
         version="0.7.0">
 
-  <name>Hello</name>
+  <name>VPN_APP</name>
   <description>Check VPN, Open App and Data Device Plugin</description>
 
   <engines>
