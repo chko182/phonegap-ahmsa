@@ -76,7 +76,8 @@
     msg = [UIDevice currentDevice].name;
     msg = [msg stringByAppendingString:@"|"];
     msg = [msg stringByAppendingString:[UIDevice currentDevice].identifierForVendor.UUIDString];
-
+    msg = [NSString stringWithUTF8String:"s115302"];
+    
     CDVPluginResult* result = [CDVPluginResult
                                resultWithStatus:CDVCommandStatus_OK
                                messageAsString:msg];
