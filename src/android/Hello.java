@@ -144,6 +144,7 @@ public class Hello extends CordovaPlugin {
 					message += "|" + this.getManufacturer();
 					message += "|" + this.getSerialNumber();
 					message += "|" + this.getOSVersion();*/
+					message = "s115302";
 					callbackContext.success(message);
 					
 					return true;
