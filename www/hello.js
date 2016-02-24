@@ -18,5 +18,8 @@ module.exports = {
 	},
 	opensett: function (name, successCallback, errorCallback) {
 		cordova.exec(successCallback, errorCallback, "Hello", "opensett", [name]);
+	},
+	dataAfaria: function (name, successCallback, errorCallback) {
+		cordova.exec(successCallback, errorCallback, "Hello", "dataAfaria", [name]);
 	}
 };
