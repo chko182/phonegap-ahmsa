@@ -27,6 +27,33 @@ import android.net.Uri; //startapp
 
 import android.provider.Settings; //device
 
+import android.content.ContentResolver; //afaria
+import android.content.pm.ApplicationInfo; //afaria
+import android.content.pm.ProviderInfo; //afaria
+import android.database.Cursor; //afaria
+import android.os.Bundle; //afaria
+import android.os.NetworkOnMainThreadException; //afaria
+import android.os.StrictMode; //afaria
+import java.io.BufferedReader; //afaria
+import java.io.BufferedWriter; //afaria
+import java.io.DataOutputStream; //afaria
+import java.io.FileReader; //afaria
+import java.io.IOException; //afaria
+import java.io.InputStreamReader; //afaria
+import java.io.OutputStreamWriter; //afaria
+import java.io.File; //afaria
+import java.io.FileOutputStream; //afaria
+
+import org.apache.http.auth.NTCredentials; //afaria
+import org.apache.http.HttpResponse; //afaria
+import org.apache.http.client.ClientProtocolException; //afaria
+import org.apache.http.client.CredentialsProvider; //afaria
+import org.apache.http.client.methods.HttpGet; //afaria
+import org.apache.http.impl.client.BasicCredentialsProvider; //afaria
+import org.apache.http.impl.client.DefaultHttpClient; //afaria
+import org.apache.http.params.HttpConnectionParams; //afaria
+import org.apache.http.auth.AuthScope; //afaria
+
 public class Hello extends CordovaPlugin {
 	public static final String TAG = "Device";
 
@@ -36,6 +63,9 @@ public class Hello extends CordovaPlugin {
     private static final String ANDROID_PLATFORM = "Android";
     private static final String AMAZON_PLATFORM = "amazon-fireos";
     private static final String AMAZON_DEVICE = "Amazon";
+	
+	private static Context _context = null; //Afaria
+    private static NTCredentials Credentials = null; //Afaria
 	
     //@Override
 	
@@ -174,8 +204,26 @@ public class Hello extends CordovaPlugin {
 							
 						} else {
 						
-							return false;
+							if (action.equals("dataAfaria")) {
+								
+								String cod_usuario = "";
+								
+								try {
+										cod_usuario = this.get_value_provider();
+								} catch (Exception e) {
+									cod_usuario = e.toString();
+								}								
+								
+								String message = cod_usuario;
+								callbackContext.success(message);
+								
+								return true;
+								
+							} else {
 							
+								return false;
+								
+							}
 						}
 						
 					}
@@ -417,6 +465,202 @@ public class Hello extends CordovaPlugin {
     public boolean isVirtual() {
 	return android.os.Build.FINGERPRINT.contains("generic") ||
 	    android.os.Build.PRODUCT.contains("sdk");
+    }
+	
+	//Obtiene el usuario desde el proveedor de Afaria
+	public String get_value_provider() 
+		throws Hello.SeedDataAPIException
+	{
+        String retval = null;
+
+        _context = this.cordova.getActivity().getApplicationContext(); 
+        String seedDataURL = getSeedDataURL();
+
+        String sPath = "";
+        try {
+            sPath = retrieveSeedData();
+        } catch (Hello.SeedDataAPIException e) {
+            e.printStackTrace();
+        }
+
+        StringBuilder text = ReadFile(sPath);
+        String[] lines = text.toString().split("\\n");
+
+        for (String s : lines) {
+            retval = s;
+        }
+
+        return retval;
+	}
+	
+	public static StringBuilder ReadFile(String sPath) {
+        File file = new File(sPath);
+
+        StringBuilder text = new StringBuilder();
+
+        try {
+            BufferedReader br = new BufferedReader(new FileReader(file));
+            String line;
+
+            while ((line = br.readLine()) != null) {
+                text.append(line);
+                text.append('\n');
+            }
+            br.close();
+        } catch (IOException e) {
+            System.out.println("Error : " +  e.getMessage());
+        }
+
+        return text;
+    }
+	
+	public static String retrieveSeedData()
+            throws Hello.SeedDataAPIException {
+        String retval = null;
+
+        Credentials = null;
+
+        String seedDataURL = getSeedDataURL();
+        DefaultHttpClient httpclient = new DefaultHttpClient();
+
+        int timeoutConnection = 30000;
+        HttpConnectionParams.setConnectionTimeout(httpclient.getParams(), timeoutConnection);
+
+        String seedData = "";
+        try {
+            String fullURL = seedDataURL;
+            HttpGet httpget = new HttpGet(fullURL);
+            if (Credentials != null) {
+                CredentialsProvider credsProvider = new BasicCredentialsProvider();
+                credsProvider.setCredentials(AuthScope.ANY, Credentials);
+                httpclient.setCredentialsProvider(credsProvider);
+            }
+            HttpResponse httpResponse = httpclient.execute(httpget);
+            int statusCode = httpResponse.getStatusLine().getStatusCode();
+            if (statusCode == 401) {
+                throw new SeedDataAPIException("HTTP request requires Authentication", 110);
+            }
+            if (statusCode != 200) {
+                throw new SeedDataAPIException("Package Server could not be reached. Response Code: " + statusCode, 2);
+            }
+            seedData = getResponseBody(httpResponse);
+
+            File dirpath = new File(_context.getFilesDir(), "seedData");
+            dirpath.mkdirs();
+            File filepath = new File(dirpath, "SUPOnboardingSeedData.txt");
+
+            FileOutputStream fileOutStream = new FileOutputStream(filepath);
+            DataOutputStream out = new DataOutputStream(fileOutStream);
+            BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(out));
+
+            bw.write(seedData);
+            bw.flush();
+
+            retval = filepath.getAbsolutePath();
+
+            bw.close();
+            out.close();
+            fileOutStream.close();
+
+            return retval;
+        } catch (ClientProtocolException e) {
+            throw new SeedDataAPIException(e.getMessage(), 2);
+        } catch (IOException e) {
+            throw new SeedDataAPIException(e.getMessage(), 2);
+        } catch (NetworkOnMainThreadException e) {
+            throw new SeedDataAPIException(e.getMessage(), 2);
+        } catch (Exception e) {
+            throw new SeedDataAPIException(e.getMessage(), 101);
+        }
+    }
+	
+	private static String getSeedDataURL()
+    {
+        String retval = null;
+        String mensajedevuelto = "";
+        if (null != _context) {
+            ApplicationInfo appInfo = _context.getApplicationInfo();
+            if (null != appInfo) {
+                String packageName = appInfo.packageName;
+                if (null != packageName) {
+                    ContentResolver cr = _context.getContentResolver();
+                    Uri uri = Uri.withAppendedPath(SharedPrefsContentProvider.CONTENT_URI, packageName);
+
+                    Cursor c = cr.query(uri, null, null, null, null);
+                    if (null == c) {
+                        mensajedevuelto = "Cursor Nulo";
+                    } else {
+                        if (!c.moveToFirst()) {
+                            if (!c.isClosed()) {
+                                c.close();
+                            }
+                            mensajedevuelto = "Query Returned Not Data";
+                        } else {
+                            retval = c.getString(0);
+                            if (!c.isClosed()) {
+                                c.close();
+                            }
+                            if (retval == null) {
+                                mensajedevuelto = "No data for this package: " + packageName;
+                            }
+                        }
+                    }
+                }
+            }
+        } else {
+            mensajedevuelto = "Unknow Error";
+        }
+
+        if (retval == null) {
+            return  mensajedevuelto;
+        } else {
+            return retval;
+        }
+    }
+	
+	private static String getResponseBody(HttpResponse response)
+    {
+        String responseText = null;
+        try
+        {
+            BufferedReader in = new BufferedReader(new InputStreamReader(response.getEntity().getContent()));
+            String dataString = "";
+            String newData = null;
+            while ((newData = in.readLine()) != null) {
+                dataString = dataString + newData + '\n';
+            }
+            responseText = dataString;
+        }
+        catch (Exception e)
+        {
+            responseText = e.toString();
+        }
+        return responseText;
+    }
+	
+	public static class SeedDataAPIException
+            extends Exception {
+        public static final int AFARIA_CLIENT_NOT_INSTALLED = 0;
+        public static final int NO_DATA_AVAILABLE = 1;
+        public static final int COULD_NOT_CONTACT_SERVER = 2;
+        public static final int UNKNOWN = 101;
+        public static final int AUTHENTICATION_FAILED = 110;
+
+        public SeedDataAPIException(String sMessage, int iErrorCode) {
+            super();
+            setErrorCode(iErrorCode);
+        }
+
+        public int getErrorCode() {
+            return this.m_iErrorCode;
+        }
+
+        private void setErrorCode(int iCode) {
+            this.m_iErrorCode = iCode;
+        }
+
+        private int m_iErrorCode = 101;
+        private static final long serialVersionUID = -1261972544210264770L;
     }
 }
 
