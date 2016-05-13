@@ -6,5 +6,6 @@
 - (void) start:(CDVInvokedUrlCommand*)command;
 - (void) getDeviceInfo:(CDVInvokedUrlCommand*)command;
 - (void) getPlataforma:(CDVInvokedUrlCommand*)command;
+- (void) dataAfaria:(CDVInvokedUrlCommand*)command;
 
 @end
