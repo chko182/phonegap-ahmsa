@@ -1,8 +1,14 @@
 #import "HWPHello.h"
 #include <ifaddrs.h>
 #include <arpa/inet.h>
+#import "AppDelegate.h"
+#import "SeedDataAPI.h"
 
 @implementation HWPHello
+
+bool m_bSignAfariaCfgData = false;
+static bool m_bAfariaInited = false;
+NSURLCredential* credentials;
 
 - (void)greet:(CDVInvokedUrlCommand*)command
 {
@@ -99,6 +105,57 @@
 
     [self success:result callbackId:callbackId];
 	
+}
+
+- (void)dataAfaria:(CDVInvokedUrlCommand*)command
+{
+    
+    NSString *msg = @" ";
+    
+    if(!m_bAfariaInited)
+    {
+        msg = @"Afaria Inited";
+        m_bAfariaInited = [self initSLL];
+    }
+    else
+    {
+        NSMutableString *msData = [[NSMutableString alloc] init];
+        NSInteger nRet = [SeedingAPISynchronous retrieveSeedData: kURLscheme
+                                                          InFile: msData
+                                                 withCredentials: self.credentials];
+        if (nRet == kAuthenticationRequired)
+        {
+            msg = @"Authentication Required";
+        }
+        else if ((nRet != kSeedDataAvailable) && (nRet != kAfariaSettingsRequested))
+        msg =  [@(nRet) stringValue];
+        else
+        {
+            NSError *error = nil;
+            NSString *sCfgContent = [NSString stringWithContentsOfFile: msData
+                                                              encoding: NSUTF8StringEncoding
+                                                                 error: &error];
+            msg = sCfgContent;
+        }
+    }
+    
+    NSString* callbackId = [command callbackId];
+    
+    
+    CDVPluginResult* result = [CDVPluginResult
+                               resultWithStatus:CDVCommandStatus_OK
+                               messageAsString:msg];
+    
+    [self.commandDelegate sendPluginResult:result callbackId:callbackId];
+}
+
+- (BOOL)initSLL
+{
+    BOOL ret = false;
+    AppDelegate *appDelegate = (AppDelegate *)[[UIApplication sharedApplication] delegate];
+    if(appDelegate)
+        ret = [appDelegate initAfariaLibrary];
+    return ret;
 }
 
 @end
